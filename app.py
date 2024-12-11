@@ -1,5 +1,5 @@
 from flask import Flask, request, got_request_exception
-from flask_restful import Resource, Api, marshal_with, fields
+from flask_restful import Resource, Api, marshal_with, fields, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -43,15 +43,13 @@ class StudentDB(db.Model):
         return f"ID : {self.id}, Name : {self.first_name} {self.last_name}, Age: {self.age}"
     
 
-def abort_if_student_doesnt_exist(pk):
-    db.session.query(User.id).filter_by(name='davidism').first() is not None
-    if pk not in TODOS:
-        abort(404, message="Todo {} doesn't exist".format(todo_id))
 
 class Student(Resource):
     @marshal_with(studentFields)
     def get(self, pk):
         student = StudentDB.query.filter_by(id=pk).first()
+        if student is None:
+            abort(404)
         return student
     
     @marshal_with(studentFields)
@@ -67,6 +65,8 @@ class Student(Resource):
     @marshal_with(studentFields)
     def delete(self, pk):
         student = StudentDB.query.filter_by(id=pk).first()
+        if student is None:
+            abort(404)
         db.session.delete(student)
         db.session.commit()
         all_students = StudentDB.query.all()
@@ -88,7 +88,7 @@ class Students(Resource):
         return student
 
 api.add_resource(Students, '/api/v1/students')
-api.add_resource(Student, '/api/v1/student/<int:pk>')
+api.add_resource(Student, '/api/v1/students/<int:pk>')
 
 if __name__ == '__main__':
     app.run(debug=True)
