@@ -36,20 +36,19 @@ class StudentDB(db.Model):
     first_name = db.Column(db.String(20), unique=False, nullable=False)
     last_name = db.Column(db.String(20), unique=False, nullable=False)
     age = db.Column(db.Integer, nullable=False)
+    grade = db.Column(db.String(2), unique=False)
 
     # repr method represents how one object of this datatable
     # will look like
     def __repr__(self):
-        return f"ID : {self.id}, Name : {self.first_name} {self.last_name}, Age: {self.age}"
+        return f"ID : {self.id}, Name : {self.first_name} {self.last_name}, Age: {self.age}, Grade: {self.grade}"
     
 
 
 class Student(Resource):
     @marshal_with(studentFields)
     def get(self, pk):
-        student = StudentDB.query.filter_by(id=pk).first()
-        if student is None:
-            abort(404)
+        student = StudentDB.query.get_or_404(id=pk)
         return student
     
     @marshal_with(studentFields)
@@ -64,9 +63,7 @@ class Student(Resource):
     
     @marshal_with(studentFields)
     def delete(self, pk):
-        student = StudentDB.query.filter_by(id=pk).first()
-        if student is None:
-            abort(404)
+        student = StudentDB.query.get_or_404(id=pk)
         db.session.delete(student)
         db.session.commit()
         all_students = StudentDB.query.all()
