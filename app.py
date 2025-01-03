@@ -14,7 +14,7 @@ api = Api(app, catch_all_404s=True)
 
 got_request_exception.connect(log_exception, app)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///student.db'
+app.config.from_pyfile('settings.py')
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -23,7 +23,8 @@ studentFields = {
     'id':fields.Integer,
     'first_name':fields.String,
     'last_name':fields.String,
-    'age':fields.Integer
+    'age':fields.Integer,
+    'grade':fields.String
  }
 
 class StudentDB(db.Model):
@@ -79,7 +80,7 @@ class Students(Resource):
     @marshal_with(studentFields)
     def post(self):
         data = request.json
-        student = StudentDB(first_name=data['first_name'], last_name=data['last_name'], age=data['age'])
+        student = StudentDB(first_name=data['first_name'], last_name=data['last_name'], age=data['age'], grade=data['grade'])
         db.session.add(student)
         db.session.commit()
         return student
