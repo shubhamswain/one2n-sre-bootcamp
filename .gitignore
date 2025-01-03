@@ -1,1 +1,3 @@
-instance/student.db
+instance/*
+.env
+.flaskenv
