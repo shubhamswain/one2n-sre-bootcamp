@@ -7,5 +7,13 @@ setup: requirements.txt
 activate: setup
 	. ./.venv/bin/activate
 
-run: setup activate
+db_create: setup activate
+	${FLASK} db init
+	${FLASK} db upgrade
+
+run: db_create
 	${FLASK} run
+
+clean:
+	rm -r .venv/
+	rm -r instance/
