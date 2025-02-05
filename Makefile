@@ -5,7 +5,7 @@ setup: requirements.txt
 	./.venv/bin/pip install -r requirements.txt
 
 activate: setup
-	./.venv/bin/activate
+	. ./.venv/bin/activate
 
 run: setup activate
 	${FLASK} run
