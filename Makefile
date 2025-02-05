@@ -8,7 +8,6 @@ activate: setup
 	. ./.venv/bin/activate
 
 db_create: setup activate
-	${FLASK} db init
 	${FLASK} db upgrade
 
 run: db_create
