@@ -1,3 +1,9 @@
 instance/*
 .env
 .flaskenv
+.vscode/*
+__pycache__/*
+*.pyc
+*.pyo
+*.pyd
+.venv/*
