@@ -1,5 +1,5 @@
 from flask import Flask, request, got_request_exception
-from flask_restful import Resource, Api, marshal_with, fields, abort
+from flask_restful import Resource, Api, marshal_with, fields
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
