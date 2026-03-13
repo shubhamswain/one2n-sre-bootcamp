@@ -86,6 +86,16 @@ class Students(Resource):
         db.session.commit()
         return student
 
+class HealthCheck(Resource):
+    def get(self):
+        try:
+            # Simple DB query to check connectivity
+            db.session.execute(db.text('SELECT 1'))
+            return {"status": "healthy", "database": "connected"}
+        except Exception as e:
+            return {"status": "unhealthy", "database": "disconnected", "error": str(e)}, 500
+
+api.add_resource(HealthCheck, '/api/v1/healthcheck')
 api.add_resource(Students, '/api/v1/students')
 api.add_resource(Student, '/api/v1/students/<int:pk>')
 
