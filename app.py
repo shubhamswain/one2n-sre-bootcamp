@@ -49,22 +49,23 @@ class StudentDB(db.Model):
 class Student(Resource):
     @marshal_with(studentFields)
     def get(self, pk):
-        student = StudentDB.query.get_or_404(id=pk)
+        student = StudentDB.query.get_or_404(pk)
         return student
     
     @marshal_with(studentFields)
     def put(self, pk):
         data = request.json
-        student = StudentDB.query.filter_by(id=pk).first()
+        student = StudentDB.query.get_or_404(pk)
         student.first_name = data['first_name']
         student.last_name = data['last_name']
         student.age = data['age']
+        student.grade = data['grade']
         db.session.commit()
         return student
     
     @marshal_with(studentFields)
     def delete(self, pk):
-        student = StudentDB.query.get_or_404(id=pk)
+        student = StudentDB.query.get_or_404(pk)
         db.session.delete(student)
         db.session.commit()
         all_students = StudentDB.query.all()
