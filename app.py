@@ -1,15 +1,34 @@
-from flask import Flask, request, got_request_exception
+from flask import Flask, request, got_request_exception, abort
 from flask_restful import Resource, Api, marshal_with, fields
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
 
 def log_exception(sender, exception, **extra):
-    """ Log an exception to our logging framework """
-    sender.logger.debug('Got exception during processing: %s', exception)
+    sender.logger.error(f'Exception during request: {exception}', exc_info=True)
 
 
 app = Flask(__name__)
+
+import logging
+from flask import g
+
+# Configure logging (optional: adjust level and format as needed)
+logging.basicConfig(
+    filename='logs/app.log',  # Logs will be written to 'app.log' in the project root
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+@app.before_request
+def log_request_info():
+    app.logger.info(f'Request: {request.method} {request.url} - Data: {request.get_json(silent=True)}')
+
+@app.after_request
+def log_response_info(response):
+    app.logger.info(f'Response: {response.status_code} - Data: {response.get_json(silent=True)}')
+    return response
+
 api = Api(app, catch_all_404s=True)
 
 got_request_exception.connect(log_exception, app)
@@ -49,26 +68,34 @@ class StudentDB(db.Model):
 class Student(Resource):
     @marshal_with(studentFields)
     def get(self, pk):
-        student = StudentDB.query.get_or_404(pk)
+        student = db.session.get(StudentDB, pk)
+        if student is None:
+            abort(404, description="Student with the specified ID does not exist.")
         return student
-    
+
     @marshal_with(studentFields)
     def put(self, pk):
         data = request.json
-        student = StudentDB.query.get_or_404(pk)
+        student = db.session.get(StudentDB, pk)
+        if student is None:
+            abort(404, description="Student with the specified ID does not exist.")
         student.first_name = data['first_name']
         student.last_name = data['last_name']
         student.age = data['age']
         student.grade = data['grade']
         db.session.commit()
+        app.logger.info(f'Updated student: {student.id}')
         return student
     
     @marshal_with(studentFields)
     def delete(self, pk):
-        student = StudentDB.query.get_or_404(pk)
+        student = db.session.get(StudentDB, pk)
+        if student is None:
+            abort(404, description="Student with the specified ID does not exist.")
         db.session.delete(student)
         db.session.commit()
         all_students = StudentDB.query.all()
+        app.logger.info(f'Deleted student: {student.id}')
         return all_students
 
 
@@ -84,6 +111,7 @@ class Students(Resource):
         student = StudentDB(first_name=data['first_name'], last_name=data['last_name'], age=data['age'], grade=data['grade'])
         db.session.add(student)
         db.session.commit()
+        app.logger.info(f'Created student: {student.id}')
         return student
 
 class HealthCheck(Resource):
@@ -93,6 +121,7 @@ class HealthCheck(Resource):
             db.session.execute(db.text('SELECT 1'))
             return {"status": "healthy", "database": "connected"}
         except Exception as e:
+            app.logger.error(f'Error occurred: {e}')
             return {"status": "unhealthy", "database": "disconnected", "error": str(e)}, 500
 
 api.add_resource(HealthCheck, '/api/v1/healthcheck')
