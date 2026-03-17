@@ -1,9 +1,9 @@
 import pytest
 import sys
 import os
-os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from app import app, db, StudentDB  # Adjust imports as needed
+os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+from app import app, db  # Adjust imports as needed
 
 @pytest.fixture
 def client():
