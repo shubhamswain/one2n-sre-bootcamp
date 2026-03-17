@@ -2,16 +2,12 @@ from flask import Flask, request, got_request_exception, abort
 from flask_restful import Resource, Api, marshal_with, fields
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
+import logging
 
 def log_exception(sender, exception, **extra):
     sender.logger.error(f'Exception during request: {exception}', exc_info=True)
 
-
 app = Flask(__name__)
-
-import logging
-from flask import g
 
 # Configure logging (optional: adjust level and format as needed)
 logging.basicConfig(
@@ -22,11 +18,18 @@ logging.basicConfig(
 
 @app.before_request
 def log_request_info():
-    app.logger.info(f'Request: {request.method} {request.url} - Data: {request.get_json(silent=True)}')
+    app.logger.info(
+        (
+            f'Request: {request.method} {request.url} - '
+            f'Data: {request.get_json(silent=True)}'
+        )
+    )
 
 @app.after_request
 def log_response_info(response):
-    app.logger.info(f'Response: {response.status_code} - Data: {response.get_json(silent=True)}')
+    app.logger.info(
+        f'Response: {response.status_code} - Data: {response.get_json(silent=True)}'
+    )
     return response
 
 api = Api(app, catch_all_404s=True)
@@ -61,7 +64,10 @@ class StudentDB(db.Model):
     # repr method represents how one object of this datatable
     # will look like
     def __repr__(self):
-        return f"ID : {self.id}, Name : {self.first_name} {self.last_name}, Age: {self.age}, Grade: {self.grade}"
+        return (
+            f"ID : {self.id}, Name : {self.first_name} {self.last_name}, "
+            f"Age: {self.age}, Grade: {self.grade}"
+        )
     
 
 
@@ -108,7 +114,17 @@ class Students(Resource):
     @marshal_with(studentFields)
     def post(self):
         data = request.json
-        student = StudentDB(first_name=data['first_name'], last_name=data['last_name'], age=data['age'], grade=data['grade'])
+        if not data:
+            abort(400, description="No input data provided")
+        try:
+            student = StudentDB(
+                first_name=data['first_name'],
+                last_name=data['last_name'],
+                age=data['age'],
+                grade=data['grade']
+            )
+        except KeyError as e:
+            abort(400, description=f"Missing required field: {e.args[0]}")
         db.session.add(student)
         db.session.commit()
         app.logger.info(f'Created student: {student.id}')
@@ -122,7 +138,11 @@ class HealthCheck(Resource):
             return {"status": "healthy", "database": "connected"}
         except Exception as e:
             app.logger.error(f'Error occurred: {e}')
-            return {"status": "unhealthy", "database": "disconnected", "error": str(e)}, 500
+            return {
+                "status": "unhealthy",
+                "database": "disconnected",
+                "error": str(e)
+            }, 500
 
 api.add_resource(HealthCheck, '/api/v1/healthcheck')
 api.add_resource(Students, '/api/v1/students')
