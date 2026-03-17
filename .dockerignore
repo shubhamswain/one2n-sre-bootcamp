@@ -1,7 +1,11 @@
-instance
 .vscode
 __pycache__
 *.pyc
 *.pyo
 *.pyd
 .venv
+logs/
+instance/
+.git
+tests/
+README.md
