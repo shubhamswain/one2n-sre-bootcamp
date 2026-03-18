@@ -45,15 +45,6 @@ db_reset: setup
 	rm -rf instance/
 	$(FLASK) db upgrade
 
-# ---- Run / dev ----
-# .PHONY: run
-# run: db_create
-# 	$(FLASK) run
-
-# .PHONY: dev
-# dev: db_create
-# 	FLASK_ENV=development FLASK_DEBUG=1 $(FLASK) run
-
 # ---- Tests ----
 .PHONY: test
 test: setup
@@ -80,24 +71,15 @@ distclean: clean
 build:
 	docker build -t student-app:${version} .
 
-.PHONY: create-network
-create-network:
-	docker network create stud-network || true
-
 .PHONY: push
 push: build
 	docker tag student-app:${version} acidcow/student-app:${version}
 	docker push acidcow/student-app:${version}
 
 .PHONY: run
-run: stop build create-network start-db
-	docker run --name student-app --network=stud-network -d -p 8080:8080 -e SQLALCHEMY_DATABASE_URI='postgresql://postgres:${POSTGRES_PASSWORD}@student-db:5432/postgres' student-app:${version}
-
-.PHONY: start-db
-start-db: create-network
-	docker run --rm --name student-db --network=stud-network -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} -d -p 5432:5432 postgres
+run:
+	docker compose -f compose.yaml up -d --build
 
 .PHONY: stop
 stop:
-	docker stop student-app student-db || true
-	docker rm student-app student-db || true
+	docker compose -f compose.yaml down
