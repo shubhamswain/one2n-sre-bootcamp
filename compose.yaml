@@ -1,0 +1,47 @@
+services:
+  student-db:
+    image: postgres:15
+    container_name: student-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: abc123
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stud-network
+
+  student-app:
+    image: student-app:0.1.3
+    container_name: student-app
+    ports:
+      - "8080:8080"
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql://postgres:abc123@student-db:5432/postgres
+    depends_on:
+      student-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:  # New: Health check for the app
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s  # Allow time for startup/migrations
+
+    networks:
+      - stud-network
+
+volumes:
+  db_data:
+
+networks:
+  stud-network:
+    driver: bridge
