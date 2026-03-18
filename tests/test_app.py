@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 os.environ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-from app import app, db  # Adjust imports as needed
+from app import app, db  # Adjust imports as needed # noqa: E402
 
 @pytest.fixture
 def client():
