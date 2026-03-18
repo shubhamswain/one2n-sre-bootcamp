@@ -139,10 +139,28 @@ A `compose.yaml` is included to run the app with PostgreSQL.
 Start the stack:
 
 ```bash
+make run
+```
+
+Or directly:
+
+```bash
 docker compose up --build
 ```
 
-The app will be available at `http://localhost:8080` (if mapped that way).
+The app will be available at `http://localhost:8080`.
+
+Stop the stack:
+
+```bash
+make stop
+```
+
+Or directly:
+
+```bash
+docker compose down
+```
 
 ---
 
@@ -160,7 +178,7 @@ The app will be available at `http://localhost:8080` (if mapped that way).
 Example request (create a student):
 
 ```bash
-curl -X POST http://localhost:5000/api/v1/students \
+curl -X POST http://localhost:8080/api/v1/students \
   -H 'Content-Type: application/json' \
   -d '{"first_name": "Jane", "last_name": "Doe", "age": 15, "grade": "10"}'
 ```
